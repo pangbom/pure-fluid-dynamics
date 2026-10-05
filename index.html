@@ -1523,9 +1523,9 @@ function frame(t) {
   // automatic quality: step down once or twice if the device struggles
   if (!autoQ.done && S.running && !document.hidden) {
     autoQ.n++;
-    if (autoQ.n === 1) autoQ.t0 = now;
-    if (autoQ.n === 150) {
-      const avg = 149000 / (now - autoQ.t0);
+    if (autoQ.n === 90) autoQ.t0 = now;
+    if (autoQ.n === 210) {
+      const avg = 120000 / (now - autoQ.t0);
       if (avg < 40 && S.qi > 0 && autoQ.drops < 2) { S.qi--; autoQ.drops++; autoQ.n = 0; buildSim(); syncUI(); toast('Lowered quality to keep the flow smooth. Change it in Settings.'); }
       else autoQ.done = true;
     }
