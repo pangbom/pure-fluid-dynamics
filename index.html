@@ -220,6 +220,7 @@ body.hide-ui #hud,body.hide-ui #legend,body.hide-ui #dock,body.hide-ui .drawer{d
   <div class="acts">
     <button id="bUndoD" title="Undo (⌘/Ctrl Z)" aria-label="Undo"><svg viewBox="0 0 24 24"><path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg></button>
     <button id="bRedoD" title="Redo (⌘/Ctrl Shift Z)" aria-label="Redo"><svg viewBox="0 0 24 24"><path d="M15 14l5-5-5-5"/><path d="M20 9H10a6 6 0 0 0 0 12h3"/></svg></button>
+    <button id="bReset" title="Reset: tap to restart the flow, hold to reset the whole scene (R)" aria-label="Reset"><svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 4v5h5"/></svg></button>
     <button id="bPlay" title="Pause / play (Space)" aria-label="Pause"><svg viewBox="0 0 24 24" id="playIco"><path d="M8 5v14M16 5v14"/></svg></button>
     <button id="bPresets" title="Scenes (P)" aria-label="Scenes"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="8" height="7" rx="1.5"/><rect x="13" y="4" width="8" height="7" rx="1.5"/><rect x="3" y="13" width="8" height="7" rx="1.5"/><rect x="13" y="13" width="8" height="7" rx="1.5"/></svg></button>
     <button id="bSettings" title="Settings (G)" aria-label="Settings"><svg viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg></button>
@@ -327,7 +328,7 @@ body.hide-ui #hud,body.hide-ui #legend,body.hide-ui #dock,body.hide-ui .drawer{d
       <kbd>← →</kbd><span>Angle of attack ±1° (Shift ±5°)</span>
       <kbd>Two fingers</kbd><span>Rotate and move the model on touch screens and trackpads</span>
       <kbd>Space</kbd><span>Pause; <kbd>.</kbd> steps once while paused</span>
-      <kbd>R</kbd><span>Reset flow</span>
+      <kbd>R</kbd><span>Reset flow (hold the reset button to reset the whole scene)</span>
       <kbd>⌘/Ctrl Z</kbd><span>Undo; add Shift to redo</span>
       <kbd>[ ]</kbd><span>Brush size</span>
       <kbd>H</kbd><span>Hide controls</span>
@@ -1298,7 +1299,15 @@ SWATCH.forEach((c, i) => {
 });
 function syncUI() { syncers.forEach(f => f()); }
 
-$('#bUndo').onclick = undo; $('#bUndoD').onclick = undo; $('#bRedoD').onclick = redo;
+$('#bUndo').onclick = undo;
+(() => {
+  const b = document.getElementById('bReset'); let t = 0, held = false;
+  b.addEventListener('pointerdown', () => { held = false; clearTimeout(t); t = setTimeout(() => { held = true; loadPreset(S.preset === 'custom' ? 'airfoil' : S.preset, true); toast('Scene reset. Undo brings your drawing back.'); }, 650); });
+  const end = () => clearTimeout(t);
+  b.addEventListener('pointerup', end); b.addEventListener('pointerleave', end); b.addEventListener('pointercancel', end);
+  b.addEventListener('click', () => { if (held) return; resetFlow(); if (S.view === 1) initParticles(); toast('Flow restarted. Hold the button to reset the whole scene.'); });
+  b.addEventListener('contextmenu', e => e.preventDefault());
+})(); $('#bUndoD').onclick = undo; $('#bRedoD').onclick = redo;
 $('#bResetFlow').onclick = () => { resetFlow(); toast('Flow reset.'); };
 $('#bClearModel').onclick = () => { pushUndo(); S.shapes = []; S.fixedRef = 0; computeRefLen(); obsDirty = true; toast('Model cleared. Undo brings it back.'); };
 $('#bClearSmoke').onclick = () => { pushUndo(); S.probes = []; };
